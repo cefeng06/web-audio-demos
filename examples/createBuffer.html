@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <button id="play">播放白噪音</button>
+</body>
+<script>
+    const ac = new AudioContext();
+    const $play = document.querySelector("#play");
+
+    $play.addEventListener("click", () => {
+        const source = ac.createBufferSource();
+        const buffer = ac.createBuffer(2, 1 * ac.sampleRate, ac.sampleRate);
+        for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
+            const channelData = buffer.getChannelData(channel);
+            for (let i = 0; i < channelData.length; i++) {
+                channelData[i] = Math.random() * 2 - 1;
+            }
+        }
+        source.buffer = buffer;
+        source.connect(ac.destination);
+        source.start();
+    });
+</script>
+</html>

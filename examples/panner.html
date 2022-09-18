@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no"/>
+    <title>Panner</title>
+    <style>
+        h1{
+            text-align: center;
+        }
+        button {
+            text-align: center;
+        }
+        #panner {
+            left: 50%;
+            top: 50%;
+            width: 500px;
+            height: 500px;
+            border: 1px solid #212121;
+            position: relative;
+            overflow: hidden;
+            transform: translateX(-250px);
+        }
+        #listener {
+            width: 50px;
+            height: 50px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            margin: -25px 0 0 -25px;
+            background-color: rgb(25, 43, 204);
+            border-radius: 25px;
+        }
+        #speaker {
+            width: 30px;
+            height: 30px;
+            position: absolute;
+            top: -150px;
+            left: -150px;
+            margin: -15px 0 0 -15px;
+            background-color: #e6d11b;
+            border-radius: 15px;
+        }
+    </style>
+</head>
+<body>
+<h1>Panner</h1>
+<div id="panner">
+    <div id="listener"></div>
+    <div id="speaker"></div>
+</div>
+<script>
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const ctx = new AudioContext();
+    const W = 500, H = 500, R = 160, soundR = 0.5;
+    function playMusic() {
+
+        ctx.resume();
+        // create source node
+        const audio = document.createElement("audio");
+        audio.src = "../audio/piano.mp3";
+        const source = ctx.createMediaElementSource(audio);
+
+        // create the panner as a speaker
+        const panner = ctx.createPanner();
+        panner.setOrientation(0, -1, 0)
+        panner.coneInnerAngle = 360;
+        panner.coneOuterAngle = 90;
+        panner.distanceModel = 'inverse';
+        panner.maxDistance = 500; 
+        panner.refDistance = 50; 
+        panner.rolloffFactor = 1; 
+
+        // set the unique listerer
+        const listener = ctx.listener;
+        listener.setOrientation(0, 1, 0, 0, 0, 1);
+
+        source.connect(panner);
+        panner.connect(ctx.destination);
+        audio.play();
+
+        let degree = 0;
+        setInterval(() => {
+            degree += 1;
+            if (degree > 360) degree -= 360;
+            const rad = degree * Math.PI / 180;
+            panner.setPosition(Math.sin(rad), Math.cos(rad), Math.cos(rad));
+            document.getElementById('speaker').style.top = (H / 2 + Math.cos(rad) * R) + 'px';
+            document.getElementById('speaker').style.left = (W / 2 + Math.sin(rad) * R) + 'px';
+        }, 10);
+    };
+
+    document.body.onclick = playMusic;
+</script>
+</body>
+</html>

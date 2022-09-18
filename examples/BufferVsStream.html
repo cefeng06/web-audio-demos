@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buffer Mode Vs Stream Mode</title>
+</head>
+<style>
+    h1 {
+        text-align: center;
+    }
+    .content {
+        width: 200px;
+        height: 300px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+</style>
+<body>
+    <h1>Buffer Mode Vs Stream Mode</h1>
+    <div class="content">
+        <audio
+            controls
+            src="../audio/piano.mp3">
+        </audio>
+        <button id='play2'>Play On StreamMode</button>
+        <button id='play1'>Play On BufferMode</button>
+    </div>
+    <!-- <button id='play3'>Play With cache</button> -->
+
+    <script>
+        let cache;
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const ctx = new AudioContext();
+        function play() {
+            // load a mp3 file on arraybuffer by xhr
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', '../audio/piano.mp3', true);
+            xhr.responseType = 'arraybuffer';
+            xhr.onload = function() { 
+
+                // decode arrayBuffer to audioBuffer
+                ctx.decodeAudioData(xhr.response, function(buffer) {
+                    
+                    // create a buffer sourceNode and bind audioBuffer
+                    const sourceNode = ctx.createBufferSource();
+                    sourceNode.buffer = buffer; 
+                    cache = sourceNode; 
+                    // wire sourceNode to speaker
+                    sourceNode.connect(ctx.destination);
+                    sourceNode.start()
+                }); 
+            };
+            xhr.send();
+        }
+
+        function playWithMedia() {
+            const audio1 = document.createElement("audio");
+            audio1.src = "../audio/piano.mp3";
+            const source1 = ctx.createMediaElementSource(audio1);
+            source1.connect(ctx.destination);
+            ctx.resume();
+            audio1.play();
+        }
+
+        function playWithCache() {
+            cache.connect(ctx.destination);
+            cache.start()
+        }
+
+        document.getElementById('play1').onclick = play;
+
+        document.getElementById('play2').onclick = playWithMedia;
+
+        // document.getElementById('play3').onclick = playWithCache;
+
+
+    </script>
+</body>
+</html>

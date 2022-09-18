@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <button id='play'>Play On BufferMode</button>
+    <script>
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const ctx = new AudioContext();
+
+        function play() {
+            ctx.resume();
+            
+            // create a 2s audiobuffer
+            const buffer = ctx.createBuffer(2, 96000, 48000);
+            // create random value in left chanenl
+            const channelData = buffer.getChannelData(0);
+            for (let i = 1; i< channelData.length; i++) {
+                channelData[i] = Math.random() * 2 - 1;
+            }
+            // create sourceNode and connect to specker
+            const sourceNode = ctx.createBufferSource();
+            sourceNode.buffer = buffer; 
+            sourceNode.connect(ctx.destination);
+            sourceNode.start();
+
+        }
+        document.getElementById('play').onclick = play;
+    </script>
+</body>
+</html>

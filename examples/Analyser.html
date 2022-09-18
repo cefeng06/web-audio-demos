@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyser</title>
+</head>
+<body>
+    <h1>Analyser</h1>
+    <canvas id="graph" width="1024" height="512"></canvas>
+    <div>
+        <button id='play'>Play</button>
+        <section class="oscillator">
+            <label>Oscillator</label>
+            <input id="oscillator" name="oscillator" type="range" value="0" step="100" max="10000" min="20">
+            <label id="oscillatorLabel">0Hz</label>
+        </section>
+        <section class="filter">
+            <label>Highpass Filter</label>
+            <input id="filter" name="highpass" type="range" value="0" step="100" max="10000" min="20">
+            <label id="filterLabel">0Hz</label>
+        </section>
+    </div>
+    <script>
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const ctx = new AudioContext();
+        const graph = drawBgc();
+        function playMusic() {
+            ctx.resume();
+            // create source node
+            const audio = document.createElement("audio");
+            audio.src = "../audio/piano.mp3";
+            const source = ctx.createMediaElementSource(audio);
+
+            const oscillator = ctx.createOscillator();
+            oscillator.frequency.value = 0;
+            oscillator.type = 'sine';
+
+            // create analyser node
+            const analyser = ctx.createAnalyser();
+            // set the sample size for FFT
+            analyser.fftSize = 2048;
+            // prepare a dataArray to recieve frequency / time domain data
+            const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+            // Create the filter and set type
+            const filter = ctx.createBiquadFilter();
+            filter.type = 'highpass';
+            filter.Q.value = 1;
+
+            source.connect(filter);
+            // oscillator.connect(filter);
+            filter.connect(analyser);
+            analyser.connect(ctx.destination);
+
+            document.getElementById('filter').onchange = (freq) => {
+                filter.frequency.value = Number(freq.target.value);
+                document.getElementById('filterLabel').innerHTML = `${freq.target.value}Hz`
+            };
+
+            document.getElementById('oscillator').onchange = (freq) => {
+                oscillator.frequency.value = Number(freq.target.value);
+                document.getElementById('oscillatorLabel').innerHTML = `${freq.target.value}Hz`
+            };
+
+            audio.play();
+            // oscillator.start();
+            const graph = drawBgc();
+            render(analyser, dataArray, graph);
+        };
+
+        function drawBgc() {
+            const graphDom = document.getElementById('graph');
+            const graph = graphDom.getContext('2d');
+            graph.fillStyle = '#fff';
+            graph.strokeStyle = '#d8870f';
+            graph.lineWidth = 2;
+            graph.fillRect(0, 0, graphDom.width, graphDom.height);
+            graph.beginPath();
+            graph.moveTo(0, graphDom.height);
+            graph.lineTo(graphDom.width, graphDom.height);
+            graph.stroke();
+            graph.closePath();
+            return graph;
+        };
+
+
+        function render(analyser, dataArray, graph) {
+            const graphDom = document.getElementById('graph');
+            analyser.getByteFrequencyData(dataArray);
+            // analyser.getByteTimeDomainData(dataArray);
+            graph.fillRect(0, 0, graphDom.width, graphDom.height);
+            graph.beginPath();
+            graph.moveTo(0, graphDom.height - dataArray[0]);
+            for (let i = 0; i < analyser.frequencyBinCount; i++) {
+                graph.lineTo(i, graphDom.height - dataArray[i]);
+            }
+            graph.stroke();
+            graph.closePath();
+            window.requestAnimationFrame(() => render(analyser, dataArray, graph));
+        };
+
+        document.getElementById('play').onclick = playMusic;
+    </script>
+</body>
+</html>

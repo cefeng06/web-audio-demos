@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <button id="play">PLAY</button>
+</body>
+<script>
+    const audioContext = new AudioContext();
+    const btn = document.getElementById("play");
+    btn.addEventListener("click", () => {
+        
+        // create a Media Element source node
+        const audio = document.createElement("audio");
+        audio.src = "../audio/piano.mp3";
+        const source = audioContext.createMediaElementSource(audio);
+        
+        // create a gain for volume adjustment
+        const gainNode = audioContext.createGain();
+        gainNode.gain.value = 1;
+        
+        // wire source to gain
+        source.connect(gainNode);       
+        
+        // wire gain to speaker
+        gainNode.connect(audioContext.destination);
+        
+        // resume audio context and play audio
+        audioContext.resume();
+        audio.play();
+
+    });
+</script>
+</html>

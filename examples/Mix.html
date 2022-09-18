@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo1</title>
+</head>
+<body>
+    <button id='play1'>Play1</button>
+    <button id='play2'>Play2</button>
+    <button id='play3'>Play3</button>
+
+    <script>
+
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const ctx = new AudioContext();
+
+        function playBuffer(buffer) { 
+            const sourceNode = ctx.createBufferSource(); 
+            sourceNode.buffer = buffer; 
+            sourceNode.connect(ctx.destination); 
+            sourceNode.start(); 
+        }
+
+        function playCompressor(buffers) {
+            const compressorNode = ctx.createDynamicsCompressor();
+            compressorNode.connect(ctx.destination);
+            buffers.forEach(buffer => {
+                const sourceNode = ctx.createBufferSource(); 
+                sourceNode.buffer = buffer; 
+                sourceNode.connect(compressorNode);
+                sourceNode.start()
+            });
+        }
+
+        function start() {
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', '../audio/audio_bus_approaching_1.mp3', true);
+            xhr.responseType = 'arraybuffer';
+            xhr.onload = function() { 
+                ctx.decodeAudioData(xhr.response, function(buffer) { 
+                    playBuffer(buffer);
+                }, function (){ 
+                    console.log('err')
+                }); 
+            };
+            xhr.send();
+        }
+
+        function start2() {
+            const audio1 = document.createElement("audio");
+            audio1.src = "../audio/audio_small_rock_rolling.mp3";
+            const source1 = ctx.createMediaElementSource(audio1);
+
+            const audio2 = document.createElement("audio");
+            audio2.src = "../audio/audio_small_rock_rolling.mp3";
+            const source2 = ctx.createMediaElementSource(audio2);
+            
+            const compressorNode = ctx.createDynamicsCompressor();
+            compressorNode.connect(ctx.destination);
+            [source1, source2].forEach(node => {
+                node.connect(compressorNode);
+            });
+
+            ctx.resume()
+            audio2.play()
+            audio1.play()
+        }
+
+        function start3() {
+            const audio1 = document.createElement("audio");
+            audio1.src = "../audio/audio_small_rock_rolling.mp3";
+            const source1 = ctx.createMediaElementSource(audio1);
+
+            const audio2 = document.createElement("audio");
+            audio2.src = "../audio/audio_small_rock_rolling.mp3";
+            const source2 = ctx.createMediaElementSource(audio2);
+            
+            [source1, source2].forEach(node => {
+                node.connect(ctx.destination);
+            });
+
+            ctx.resume()
+            audio2.play()
+            audio1.play()
+        }
+
+        document.getElementById('play1').onclick = start;
+        document.getElementById('play2').onclick = start2;
+        document.getElementById('play3').onclick = start3;
+
+    </script>
+</body>
+</html>
